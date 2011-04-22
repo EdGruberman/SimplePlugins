@@ -6,9 +6,9 @@ public class Main extends org.bukkit.plugin.java.JavaPlugin {
     
     public static MessageManager messageManager = null;
        
-    private static final String DEFAULT_LOG_LEVEL       = Integer.toString(MessageLevel.RIGHTS.level.intValue());
-    private static final String DEFAULT_SEND_LEVEL      = Integer.toString(MessageLevel.RIGHTS.level.intValue());
-    private static final String DEFAULT_BROADCAST_LEVEL = Integer.toString(MessageLevel.RIGHTS.level.intValue());
+    private static final String DEFAULT_LOG_LEVEL       = "RIGHTS";
+    private static final String DEFAULT_SEND_LEVEL      = "RIGHTS";
+    private static final String DEFAULT_BROADCAST_LEVEL = "RIGHTS";
 	
     public void onEnable() {
         Main.messageManager = new MessageManager(this);

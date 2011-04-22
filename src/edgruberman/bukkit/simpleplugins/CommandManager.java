@@ -8,6 +8,7 @@ import org.bukkit.plugin.PluginManager;
 
 import edgruberman.bukkit.simpleplugins.MessageManager.MessageLevel;
 
+//TODO reload command to reload .jar file for plugin
 public class CommandManager implements CommandExecutor 
 {
     private Main main;
