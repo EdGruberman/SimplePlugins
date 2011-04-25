@@ -7,7 +7,7 @@ Specification-Title: SimplePlugins
 Specification-Version: 1.0
 Specification-Vendor: EdGruberman (ed@rjump.com)
 Implementation-Title: edgruberman.bukkit.simpleplugins
-Implementation-Version: 0b2
+Implementation-Version: 0b9
 Implementation-Vendor: EdGruberman (ed@rjump.com)
 Class-Path: 
 

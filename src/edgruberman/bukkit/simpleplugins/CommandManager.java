@@ -1,5 +1,7 @@
 package edgruberman.bukkit.simpleplugins;
 
+import java.io.File;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -8,7 +10,7 @@ import org.bukkit.plugin.PluginManager;
 
 import edgruberman.bukkit.simpleplugins.MessageManager.MessageLevel;
 
-//TODO reload command to reload .jar file for plugin
+//TODO unload .jar before loading it.
 public class CommandManager implements CommandExecutor 
 {
     private Main main;
@@ -33,13 +35,13 @@ public class CommandManager implements CommandExecutor
         if (split.length >= 2) {
             pluginName = split[1];
             plugin = pluginManager.getPlugin(pluginName);
-            if (plugin == null) {
+            if (plugin == null && !(action.equals("refresh") || action.equals("load")) ) {
                 Main.messageManager.respond(sender, MessageLevel.SEVERE, "Plugin \"" + pluginName + "\" not found.");
                 return true;
             }
         }
         
-        if (action == null) {
+        if (action == null || action.equals("list")) {
             String message = "";
             for (Plugin loaded : pluginManager.getPlugins()) {
                 if (!message.equals("")) message += "\n";
@@ -49,44 +51,87 @@ public class CommandManager implements CommandExecutor
             }
             Main.messageManager.respond(sender, MessageLevel.CONFIG, message);
             
-        } else if (action.equals("enable")) {
-            if (pluginManager.isPluginEnabled(pluginName)) {
-                Main.messageManager.respond(sender, MessageLevel.WARNING, "Plugin \"" + pluginName + "\" is already enabled.");
-                return true;
-            }
-            
-            pluginManager.enablePlugin(plugin);
-            Main.messageManager.respond(sender, MessageLevel.CONFIG, "Plugin \"" + pluginName + "\" now enabled.");
-            
-        } else if (action.equals("disable")) {
-            if (pluginName.equals(this.main.getDescription().getName())) {
-                Main.messageManager.respond(sender, MessageLevel.WARNING, "You must manually remove this plugin to disable it.");
-                return true;
-            }
-            
-            if (!pluginManager.isPluginEnabled(pluginName)) {
-                Main.messageManager.respond(sender,  MessageLevel.WARNING, "Plugin \"" + pluginName + "\" is already disabled.");
-                return true;
-            }
-            
-            pluginManager.disablePlugin(plugin);
-            Main.messageManager.respond(sender, MessageLevel.CONFIG, "Plugin \"" + pluginName + "\" now disabled.");
-            
-        } else if (action.equals("restart")) {
-            if (pluginManager.isPluginEnabled(pluginName)) {
-                pluginManager.disablePlugin(plugin);
-                Main.messageManager.respond(sender, MessageLevel.CONFIG, "Plugin \"" + pluginName + "\" now disabled.");
-            } else {
-                Main.messageManager.respond(sender,  MessageLevel.WARNING, "Plugin \"" + pluginName + "\" is not currently enabled.");
-            }
-            pluginManager.enablePlugin(plugin);
-            Main.messageManager.respond(sender, MessageLevel.CONFIG, "Plugin \"" + pluginName + "\" now enabled.");
-            
-        } else {
-            this.showUsage(sender, label, "Unrecognized action.");
+        } else if (action.equals("enable"))  { this.enablePlugin(pluginManager, plugin, sender);
+        } else if (action.equals("disable")) { this.disablePlugin(pluginManager, plugin, sender);
+        } else if (action.equals("restart")) { this.disablePlugin(pluginManager, plugin, sender);
+                                               this.enablePlugin(pluginManager, plugin, sender);
+        } else if (action.equals("load"))    { this.loadPlugin(pluginManager, pluginName, plugin, sender);
+        } else if (action.equals("refresh")) { this.loadPlugins(pluginManager, sender);
+        } else { this.showUsage(sender, label, "Unrecognized action.");
         }
         
         return true;
+    }
+    
+    private void enablePlugin(PluginManager pluginManager, Plugin plugin, CommandSender sender) {
+        if (plugin == null) return;
+        
+        if (plugin.isEnabled()) {
+            Main.messageManager.respond(sender, MessageLevel.WARNING
+                , "Plugin \"" + plugin.getDescription().getName() + "\" is already enabled.");
+            return;
+        }
+        
+        pluginManager.enablePlugin(plugin);
+        Main.messageManager.respond(sender, MessageLevel.CONFIG
+            , "Plugin \"" + plugin.getDescription().getName() + "\" enabled.");
+    }
+    
+    private void disablePlugin(PluginManager pluginManager, Plugin plugin, CommandSender sender) {
+        if (plugin == null) return;
+        
+        if (plugin.getDescription().getName().equals(this.main.getDescription().getName())) {
+            Main.messageManager.respond(sender, MessageLevel.WARNING
+                , "You must manually remove this \"" + this.main.getDescription().getName() + "\" plugin to disable it.");
+            return;
+        }
+        
+        if (!plugin.isEnabled()) {
+            Main.messageManager.respond(sender,  MessageLevel.WARNING
+                , "Plugin \"" + plugin.getDescription().getName() + "\" is already disabled.");
+            return;
+        }
+        
+        pluginManager.disablePlugin(plugin);
+        Main.messageManager.respond(sender, MessageLevel.CONFIG
+            , "Plugin \"" + plugin.getDescription().getName() + "\" disabled.");
+    }
+    
+    private void loadPlugin(PluginManager pluginManager, String pluginName, Plugin plugin, CommandSender sender) {
+        this.disablePlugin(pluginManager, plugin, sender);
+        
+        try {
+            pluginManager.loadPlugin(new File(this.main.getDataFolder().getParent(), pluginName + ".jar"));
+            Main.messageManager.respond(sender, MessageLevel.CONFIG, "Plugin \"" + pluginName + "\" loaded.");
+            this.enablePlugin(pluginManager, plugin, sender);
+        } catch (Exception e) {
+            Main.messageManager.log(MessageLevel.SEVERE, "Error loading \"" + pluginName + "\"", e);
+            Main.messageManager.respond(sender, MessageLevel.SEVERE, "Error loading \"" + pluginName + "\"; See log for details.");
+        }
+    }
+    
+    private void loadPlugins(PluginManager pluginManager, CommandSender sender) {
+        for (Plugin p : pluginManager.getPlugins()) {
+            this.disablePlugin(pluginManager, p, sender);
+        }
+        
+        // TODO This clears out even this plugin and cancels execution.
+        // pluginManager.clearPlugins();
+        
+        try {
+            pluginManager.loadPlugins(new File(this.main.getDataFolder().getParentFile().getPath()));
+            Main.messageManager.respond(sender, MessageLevel.CONFIG
+                , "" + pluginManager.getPlugins().length + " plugins loaded all from \"" + this.main.getDataFolder().getParentFile() + "\".");
+        } catch (Exception e) {
+            Main.messageManager.log(MessageLevel.SEVERE
+                , "Error loading all plugins from \"" + this.main.getDataFolder().getParentFile().getPath() + "\"", e);
+            Main.messageManager.respond(sender, MessageLevel.SEVERE
+                , "Error loading all plugins from \"" + this.main.getDataFolder().getParentFile() + "\"; See log for details.");
+        }
+        
+        for (Plugin p : pluginManager.getPlugins()) {
+            this.enablePlugin(pluginManager, p, sender);
+        }
     }
     
     private void showUsage(CommandSender sender, String label, String error) {

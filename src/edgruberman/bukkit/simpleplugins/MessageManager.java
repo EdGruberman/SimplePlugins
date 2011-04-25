@@ -101,6 +101,8 @@ public final class MessageManager {
      * @param e Related error message to output along with log entry.
      */
     public void log(MessageLevel level, String message, Throwable e) {
+        if (!this.isLogLevel(level)) return;
+        
         if (e != null) message = message.replaceAll("\n", "   ");
         for (String messageLine : message.split("\n")) {
             messageLine = String.format(this.LOG_FORMAT, this.plugin.getDescription().getName(), messageLine);
@@ -125,7 +127,7 @@ public final class MessageManager {
      * @param level MessageLevel to determine if it will be displayed or not.
      * @return true if current level will display this message; false otherwise.
      */
-    public boolean isSendLevel(MessageLevel level) {
+    public synchronized boolean isSendLevel(MessageLevel level) {
         return level.level.intValue() >= this.sendLevel.level.intValue();
     }
     
@@ -221,7 +223,7 @@ public final class MessageManager {
      * Standardization for coloring of common messages.
      * TODO: Create custom Levels that extend Level. (But it sure is nice to have this all in one file for now.)
      */
-    public enum MessageLevel {
+    public static enum MessageLevel {
         /**
          * Corrective actions. (send = RED; broadcast = DARK_RED; Level = SEVERE/1000)
          */
