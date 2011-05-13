@@ -1,2 +1,3 @@
-﻿logLevel: RIGHTS
-sendLevel: RIGHTS
+level:
+    log: RIGHTS
+    send: RIGHTS

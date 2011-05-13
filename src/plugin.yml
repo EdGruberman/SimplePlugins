@@ -1,8 +1,9 @@
 name: SimplePlugins
 description: Plugin management functions for enabling/disabling.
 version: %VERSION%
-author: EdGruberman (ed@rjump.com)
+depend: [MessageManager]
 main: edgruberman.bukkit.simpleplugins.Main
+author: EdGruberman (ed@rjump.com)
 commands:
     plugin:
         description: Manage Bukkit plugins.
