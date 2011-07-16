@@ -4,24 +4,24 @@ import edgruberman.bukkit.messagemanager.MessageManager;
 
 public class Main extends org.bukkit.plugin.java.JavaPlugin {
     
-    public static MessageManager messageManager = null;
+    static ConfigurationFile configurationFile;
+    static MessageManager messageManager;
 	
     public void onLoad() {
-        Configuration.load(this);
+        Main.configurationFile = new ConfigurationFile(this);
+        Main.configurationFile.load();
+        
+        Main.messageManager = new MessageManager(this);
+        Main.messageManager.log("Version " + this.getDescription().getVersion());
     }
     
     public void onEnable() {
-        Main.messageManager = new MessageManager(this);
-        Main.messageManager.log("Version " + this.getDescription().getVersion());
-                
         this.getCommand("plugin").setExecutor(new CommandManager(this));
 
         Main.messageManager.log("Plugin Enabled");
     }
     
     public void onDisable() {
-        this.getCommand("plugin").setExecutor(null);
-        
         Main.messageManager.log("Plugin Disabled");
     }
 }
